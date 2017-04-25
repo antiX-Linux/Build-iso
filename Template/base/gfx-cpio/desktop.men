@@ -1,0 +1,12 @@
+Default        `
+Rox-Fluxbox    `desktop=rox-fluxbox
+Space-Fluxbox  `desktop=space-fluxbox
+Fluxbox        `desktop=fluxbox
+Rox-Jwm        `desktop=rox-jwm
+Space-Jwm      `desktop=space-jwm
+Jwm            `desktop=jwm
+Herbstluftwm   `desktop=min-herbstluftwm
+min-Fluxbox    `desktop=min-fluxbox
+min-Jwm        `desktop=min-jwm
+Dark theme       `desktheme=dark
+Light theme      `desktheme=light
