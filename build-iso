@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.00.01"
-VERSION_DATE="Thu Dec  8 01:23:31 MST 2016"
+VERSION="1.00.02"
+VERSION_DATE="Sat Jul  8 23:58:14 MDT 2017"
 
 ME=${0##*/}
 
@@ -127,7 +127,7 @@ main() {
     local build_dir="/Build"
     local partial_name="PARTIAL"
     local partial_file=$build_dir/$partial_name
-    local seed_fname=".seed"
+    local seed_fname="random-seed"
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
@@ -1067,10 +1067,14 @@ do_stage_4() {
             say "Set up live user account $(pq $user)"
             grep -q "^$user:" /etc/group || groupadd $user
             local user_pw=$(mkpasswd -m sha-512 $user)
-            gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
-            useradd -s /bin/bash -G $(gather_join user-groups) -g $user \
-                -d /home/$user -p $user_pw $user
+            useradd -s /bin/bash -g $user -d /home/$user -p $user_pw $user
         fi
+
+        gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
+        local group
+        for group in $(gather user-groups); do
+            usermod -a -G $group $user
+        done
 
         say "Set root password"
         local root_pw=$(mkpasswd -m sha-512 root)
@@ -1127,6 +1131,8 @@ do_stage_4() {
     _say_
     say "Write version files"
     write_version_files
+
+    mkdir -p /usr/share/antiX
 
     dpkg-query -l | sed -n 's/^ii\s\+//p' > $output_dir/package-list.out
     dpkg-query -l | sed -n 's/^ii\s\+//p' > /usr/share/antiX/installed-packages.txt
@@ -1393,11 +1399,11 @@ Bootloader_Data
 
         rm -rf $initrd_dir/lib/modules/
 
-        #$tools/copy-initrd-modules --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir \
-        #    --count --dir kernel/drivers/ata $initrd_modules_file*
-
         # Note: please used built-in list so we are all in sync.  Thanks!
         $tools/copy-initrd-modules --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
+
+        $tools/copy-initrd-programs --to $initrd_dir --clean
+        $tools/copy-initrd-programs --to $initrd_dir --from $sqfs_dir
     fi
 
     local initrd_gz=$iso_dir/antiX/initrd.gz
@@ -1458,7 +1464,7 @@ do_stage_7() {
     $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86 $arg
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
-    md5sum_file $linuxfs_file 
+    md5sum_file $linuxfs_file
 
     leave_stage
 }
