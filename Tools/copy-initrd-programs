@@ -28,6 +28,7 @@ Options:
     -f --from=<dir>    get libs and programs from under <dir>
     -F --force         Skip missing programs
     -h --help          Show this usage
+    -n --no-color      Turn off text colors
     -p --pretend       Don't actually copy anything
     -q --quiet         Supress modprobe warnings
     -s --show          Show default values of environment variables
@@ -37,7 +38,7 @@ Options:
 A --to directory or a from --directory must be specified.
 Short options can be stacked.  Example:
 
-    $ME -fvp
+    $ME -cnp
 Usage
 
     exit ${1:-0}
@@ -56,6 +57,7 @@ eval_argument() {
              -force|F) FORCE=true              ;;
               -from=*) FROM_DIR=$val           ;;
               -help|h) usage                   ;;
+          -no-color|n) NO_COLOR=true           ;;
            -pretend|p) PRETEND=true            ;;
              -quiet|q) QUIET=true              ;;
               -show|s) do_show        ; exit 0 ;;
@@ -83,7 +85,7 @@ takes_param() {
 main() {
     [ $# -eq 0 ] && usage 0
 
-    local SHIFT SHORT_STACK="cCefFhpqtv"
+    local SHIFT SHORT_STACK="cCefFhnpqtv"
 
     local sudo
     [ "$UID" = 1 ] || sudo=sudo
@@ -91,13 +93,13 @@ main() {
     read_params "$@"
     shift $SHIFT
 
-    #[ -n "$TARGET" -a -n "$FORCE" ] && fatal "Can't use --force with --target"
+    [ -n "$NO_COLOR" ] || set_colors
 
     local prog_list abs_prog_list
     case $# in
         0)  prog_list=$DEFAULT_PROG_LIST                     ;;
         *)  prog_list="$*"
-            qsay "Using %s program(s) from command line" $#  ;;
+            qsay "Installing %s program(s) from command line" $#  ;;
     esac
 
     if [ $# -eq 0 -a -n "$ADD_ENCRYPT$DO_CLEAN" ]; then
@@ -114,7 +116,7 @@ main() {
     local bin_dir=$TO_DIR/$BIN_SUBDIR  lib_dir=$TO_DIR/$LIB_SUBDIR
 
     if [ "$DO_CLEAN" ]; then
-        qsay "Cleaning out program(s): %s" "$prog_list"
+        qsay "Cleaning out all libraries and these program(s): %s" "$prog_list"
         do_clean "$TO_DIR" "$lib_dir" "$bin_dir" "$prog_list"
         exit 0
     fi
@@ -152,7 +154,7 @@ main() {
     for abs_prog in $abs_prog_list; do
         local from_prog="$FROM_DIR$abs_prog"
 
-        qsay "add program: %s" "$(basename $abs_prog)"
+        qsay "  add program: %s" "$(basename $abs_prog)"
         pretend cp "$from_prog" "$bin_dir"
 
         local raw_libs
@@ -408,7 +410,6 @@ set_colors() {
          warn_co=$yellow
 }
 
-set_colors
 main "$@"
 
 
