@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.00.02"
-VERSION_DATE="Sat Jul  8 23:58:14 MDT 2017"
+VERSION="1.00.03"
+VERSION_DATE="Tue Aug  8 16:38:24 MDT 2017"
 
 ME=${0##*/}
 
@@ -1259,8 +1259,8 @@ iface eth0 inet dhcp
 Eth0_entry
     fi
 
-    local cached=$sqfs_dir/etc/console-setup/cached
-    if [ -n "$(ls $cached* 2>/dev/null)" ]; then
+    local cached=$sqfs_dir/etc/console-setup/cached_setup_keyboard.sh
+    if test -e $cached; then
         say "Removing console-setup cached files"
         $SUDO rm $cached*
     fi
@@ -1273,10 +1273,36 @@ Eth0_entry
         $SUDO chmod a-wx $ofile
     done
 
+    local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
+    local bc_fw_txt=${bc_fw_bin%.bin}.txt
+    local bc_fw_name=$(basename $bc_fw_bin)
+
+    if test -e $bc_fw_bin && ! test -e $bc_fw_txt; then
+        say "Linking to $(pq $bc_fw_name)"
+        $SUDO ln -s $bc_fw_name $bc_fw_txt
+    fi
+
     local vim_bin=$sqfs_dir/usr/bin/vim
     if [ -x $vim_bin.tiny -a ! -e $vim_bin ]; then
         say "Making /usr/bin/vim symlink to vim.tiny"
         $SUDO ln -s vim.tiny $vim_bin
+    fi
+
+    local cli_cc_prog=antiX-cli-cc
+    if test -x $sqfs_dir/usr/local/bin/$cli_cc_prog; then
+        local dir file
+        for dir in /root /etc/skel; do
+            file=$sqfs_dir$dir/.bash_history
+            #$SUDO test -e $file && continue
+
+            say "Putting command line control centre into Bash history in $(pq $dir)"
+            echo $cli_cc_prog | $SUDO tee $file >/dev/null
+        done
+
+    # Make sure root's history is either clobbered (above) or erased
+    elif $SUDO test -e $sqfs_dir/root/.bash_history; then
+        say "Deleting root's history"
+        $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
 
     leave_stage
