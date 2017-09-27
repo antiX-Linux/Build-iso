@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.00.04"
-VERSION_DATE="Fri Sep 15 13:59:10 MDT 2017"
+VERSION="1.00.06"
+VERSION_DATE="Sun Sep 24 23:22:58 MDT 2017"
 
 ME=${0##*/}
 
@@ -1390,6 +1390,10 @@ Bootloader_Data
 
     # (7) Enabled "Save" menu on syslinux side only
     sed -r -i "/key\.F.=save/ s/^\s*;+\s*//" $syslinux_cpio/gfxboot.cfg
+
+    # (7.1) add ask+save entry to syslinux console menu
+    local con_menu=$syslinux_cpio/console.men
+    grep -q "ask+save" $con_menu || echo "ask+save \`vga=ask gfxsave" >> $con_menu
 
     # (8) Create/update text (UEFI) desktop menu based on menu in isolinux cpio archive
     local desktop_men=$isolinux_cpio/desktop.men
