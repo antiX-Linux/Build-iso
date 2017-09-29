@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.00.06"
-VERSION_DATE="Sun Sep 24 23:22:58 MDT 2017"
+VERSION="1.00.07"
+VERSION_DATE="Wed Sep 27 13:20:59 MDT 2017"
 
 ME=${0##*/}
 
@@ -1493,7 +1493,7 @@ Bootloader_Data
 
     say "Initializing random number generator"
     local seed_file=$iso_dir/antiX/$seed_fname
-    dd if=/dev/urandom of=$seed_file bs=1 count=512
+    dd status=none if=/dev/urandom of=$seed_file bs=1 count=512
 
     leave_stage
 }
@@ -1520,12 +1520,12 @@ do_stage_7() {
     local linuxfs_file=$iso_dir/antiX/linuxfs
     rm -f $linuxfs_file
 
-    local arg
-
     start_timer
     #                                                    262144 = 0x40000
     #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 $arg
-    $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86 $arg
+    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
+    cmd $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
+
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
@@ -2331,7 +2331,7 @@ write_version_files() {
 
     echo "$fancy_name" > $prefix/etc/antix-version
 
-    local rstring=$(dd if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
+    local rstring=$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
     local kernels=$K_NAME
     [ "$K_NAME2" ] && kernels="$kernels $K_NAME2"
     local title=$LINUXFS_TITLE
@@ -2927,6 +2927,13 @@ fatal()  {
 }
 
 
+#------------------------------------------------------------------------------
+# echo a command to the sceeen and the log file then run it
+#------------------------------------------------------------------------------
+cmd() {
+    _say_ " > $*"
+    "$@"
+}
 #------------------------------------------------------------------------------
 # plural cnt string
 # Do simple substition on <string> to match the <cnt>.  May need more entries
