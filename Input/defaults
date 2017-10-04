@@ -12,6 +12,7 @@ CODE_NAME="Heather Heyer"
 ASCII_CODE_NAME="Heather Heyer"
 DEBIAN_RELEASE="stretch"
 DISTRO_NAME="antiX"
+<<<<<<< HEAD
 DISTRO_VERSION="17.rc1"
 HOME_URL="http://antix.mepis.org/"
 
@@ -24,6 +25,15 @@ K_TEMPLATE="%V%G-antix.%R-%A-smp"
 K_VERSION="4.10.5"
 #K_VERSION="4.13.4"
 
+=======
+DISTRO_VERSION="16.1"
+HOME_URL="http://antix.mepis.org/"
+
+K_REVISION="1"
+K_TEMPLATE="%V%G-antix.%R-%A-smp"
+K_VERSION="4.4.10"
+#K_VERSION="4.8.1"
+>>>>>>> upstream/master
 
 #K_REVISION="7"
 #K_TEMPLATE="%V%G-antix.%R-%A-smp"

@@ -2,7 +2,11 @@
 # Stretch is the new stable release and will only recieve security 
 # updates, while Testing will be 'rolling'.
 
+<<<<<<< HEAD
 # Debian Stable. Default for antiX-17.
+=======
+# Debian Stable. Default for antiX-16.
+>>>>>>> upstream/master
 # Use for maximum stability INSTEAD of the 'rolling' TESTING release concept.
 deb http://ftp.gr.debian.org/debian/ stretch main contrib non-free 
 deb http://security.debian.org/ stretch/updates main contrib non-free

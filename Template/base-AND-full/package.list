@@ -31,8 +31,13 @@ br2684ctl
 brit-icons
 broadcom-manager-antix
 broadcom-sta-dkms
+<<<<<<< HEAD
 #browser-plugin-freshplayer-pepperflash
 #bunsen-pepperflash
+=======
+browser-plugin-freshplayer-pepperflash
+bunsen-pepperflash
+>>>>>>> upstream/master
 bzip2
 #ca-certificates #on core
 calcurse
@@ -107,7 +112,10 @@ firmware-realtek
 #firmware-ti-connectivity #Debian
 firmware-zd1211
 flac
+<<<<<<< HEAD
 #flash-antix
+=======
+>>>>>>> upstream/master
 #flashplugin-nonfree # replaced by pepperflashplugin-nonfree
 fluxbox
 fluxbox-themes-antix
