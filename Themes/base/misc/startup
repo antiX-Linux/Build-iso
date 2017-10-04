@@ -2,6 +2,9 @@
 # Puts a volume icon on the taskbar
 volumeicon & 
 
+# Enable/Disable automounting
+automount-antix &
+
 # Puts a flag on the taskbar to show which keyboard is being used.
 #fbxkb &
 

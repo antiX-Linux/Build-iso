@@ -6,4 +6,4 @@ Exec=pybootchartgui
 Terminal=false
 Type=Application
 Categories=System;Monitor;
-NoDisplay=true
+NoDisplay=True

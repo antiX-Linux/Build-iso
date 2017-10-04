@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Exec=gksu install-meta
+Icon=metapackage-installer
+Name=metapackage-installer
+Name[de]=metapackage-installer
+Name[pt]=instalar pacotes meta
+Name[pt_BR]=instalar pacotes meta
+Name[ru]=Мета-инсталлятор
+Categories=System;
+NoDisplay=True

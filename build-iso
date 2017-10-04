@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION=0.60
-VERSION_DATE="Sat Feb  7 00:53:57 MST 2015"
+VERSION="1.00.07"
+VERSION_DATE="Wed Sep 27 13:20:59 MDT 2017"
 
 ME=${0##*/}
 
@@ -127,6 +127,7 @@ main() {
     local build_dir="/Build"
     local partial_name="PARTIAL"
     local partial_file=$build_dir/$partial_name
+    local seed_fname="random-seed"
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
@@ -958,12 +959,12 @@ do_stage_4() {
         else
             error "Missing or unknown cursor icon theme $(pqw $CURSOR_ICON_THEME)"
         fi
+
+	say "Reconfigure networking sym links"
+        update-rc.d networking remove
+        update-rc.d networking defaults
         say "Disable bootchart-done"
-<<<<<<< HEAD
-        update-rc.d bootchart-done remove
-=======
         update-rc.d "bootchart-done" remove
->>>>>>> upstream/master
         end_part_strict
     fi
 
@@ -1070,10 +1071,14 @@ do_stage_4() {
             say "Set up live user account $(pq $user)"
             grep -q "^$user:" /etc/group || groupadd $user
             local user_pw=$(mkpasswd -m sha-512 $user)
-            gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
-            useradd -s /bin/bash -G $(gather_join user-groups) -g $user \
-                -d /home/$user -p $user_pw $user
+            useradd -s /bin/bash -g $user -d /home/$user -p $user_pw $user
         fi
+
+        gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
+        local group
+        for group in $(gather user-groups); do
+            usermod -a -G $group $user
+        done
 
         say "Set root password"
         local root_pw=$(mkpasswd -m sha-512 root)
@@ -1085,7 +1090,7 @@ do_stage_4() {
     if do_part 18 "Run second apt-get -f install"; then
 
         if [ "$DEBIAN_RELEASE" != "wheezy" ]; then
-            apt-get $APT_GET_OPTS purge gcc-4.8-base systemd libsystemd0 uuid-runtime
+            apt-get $APT_GET_OPTS purge systemd libsystemd0 
         fi
 
         apt-get -f install
@@ -1131,6 +1136,8 @@ do_stage_4() {
     say "Write version files"
     write_version_files
 
+    mkdir -p /usr/share/antiX
+
     dpkg-query -l | sed -n 's/^ii\s\+//p' > $output_dir/package-list.out
     dpkg-query -l | sed -n 's/^ii\s\+//p' > /usr/share/antiX/installed-packages.txt
 
@@ -1141,6 +1148,12 @@ do_stage_4() {
         check_errors_reset
         end_part_strict
     fi
+
+    local partial_dir=/var/cache/apt/archives/partial
+    say "Fix $(pq $partial_dir) directory"
+    mkdir -p $partial_dir
+    chown _apt:root -R $partial_dir
+    chmod 700 $partial_dir
 
     local update_cmd=updatedb
     say "Run $update_cmd"
@@ -1199,6 +1212,12 @@ do_stage_5() {
         check_kernel_gcc vmlinuz-$K_NAME
         end_part_strict
     fi
+    	
+    if [ "$FLAV" = "base" ]; then
+        say "Change flubox and icewm menu-applications files"
+        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications-fb $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications
+        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications-ice $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications
+    fi
 
     local f wm
     say "Change ownership of 3 menu-applications files"
@@ -1239,16 +1258,70 @@ do_stage_5() {
     say "Delete $(pq /etc/mtab)"
     $SUDO rm -f $sqfs_dir/etc/mtab
 
+    say "Customize configuration"
+    copy_template_dir -o custom-config-files $sqfs_dir
+
     #collect_live_files $live_files_list /usr/local/share/live-files
     say "Save Live files for snapshot"
 
     $SUDO rm -rf $sqfs_dir/usr/local/share/live-files
     $SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
 
+    local if_file=$sqfs_dir/etc/network/interfaces
+    if ! grep -q eth0 $if_file; then
+        say "Adding eth0 entry to $(pq ${if_file#$sqfs_dir})"
+        cat <<Eth0_entry | $SUDO tee -a $if_file >/dev/null
+
+# The primary network interface
+allow-hotplug eth0
+iface eth0 inet dhcp
+Eth0_entry
+    fi
+
+    local cached=$sqfs_dir/etc/console-setup/cached_setup_keyboard.sh
+    if test -e $cached; then
+        say "Removing console-setup cached files"
+        $SUDO rm $cached*
+    fi
+
+    local exclude_files=$sqfs_dir/usr/local/share/excludes/*.list
+    local efile ofile
+    for efile in $exclude_files; do
+        ofile=${efile%.list}.orig
+        $SUDO cp $efile $ofile
+        $SUDO chmod a-wx $ofile
+    done
+
+    local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
+    local bc_fw_txt=${bc_fw_bin%.bin}.txt
+    local bc_fw_name=$(basename $bc_fw_bin)
+
+    if test -e $bc_fw_bin && ! test -e $bc_fw_txt; then
+        say "Linking to $(pq $bc_fw_name)"
+        $SUDO ln -s $bc_fw_name $bc_fw_txt
+    fi
+
     local vim_bin=$sqfs_dir/usr/bin/vim
     if [ -x $vim_bin.tiny -a ! -e $vim_bin ]; then
         say "Making /usr/bin/vim symlink to vim.tiny"
         $SUDO ln -s vim.tiny $vim_bin
+    fi
+
+    local cli_cc_prog=antiX-cli-cc
+    if test -x $sqfs_dir/usr/local/bin/$cli_cc_prog; then
+        local dir file
+        for dir in /root /etc/skel; do
+            file=$sqfs_dir$dir/.bash_history
+            #$SUDO test -e $file && continue
+
+            say "Putting command line control centre into Bash history in $(pq $dir)"
+            echo $cli_cc_prog | $SUDO tee $file >/dev/null
+        done
+
+    # Make sure root's history is either clobbered (above) or erased
+    elif $SUDO test -e $sqfs_dir/root/.bash_history; then
+        say "Deleting root's history"
+        $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
 
     leave_stage
@@ -1316,11 +1389,21 @@ Bootloader_Data
     # (6) Create/append-to text-only bootloader menu (.msg file)
     local isolinux_cfg=$isolinux_dir/isolinux.cfg
     local syslinux_cfg=$syslinux_dir/syslinux.cfg
+
+    if [ "$MEM_TEST_BUG" ]; then
+        say "Comment out memtest in $(basename $syslinux_cfg)"
+        sed -i "/memtest/,$ s/^/#--memtest /" $syslinux_cfg
+    fi
+
     $tools/make-isolinux-menu $isolinux_cfg >> $isolinux_dir/readme.msg
     $tools/make-isolinux-menu $syslinux_cfg >> $syslinux_dir/readme.msg
 
     # (7) Enabled "Save" menu on syslinux side only
     sed -r -i "/key\.F.=save/ s/^\s*;+\s*//" $syslinux_cpio/gfxboot.cfg
+
+    # (7.1) add ask+save entry to syslinux console menu
+    local con_menu=$syslinux_cpio/console.men
+    grep -q "ask+save" $con_menu || echo "ask+save \`vga=ask gfxsave" >> $con_menu
 
     # (8) Create/update text (UEFI) desktop menu based on menu in isolinux cpio archive
     local desktop_men=$isolinux_cpio/desktop.men
@@ -1347,7 +1430,7 @@ Bootloader_Data
     fi
 
     say "Make efi.img"
-    $SUDO $tools/make-efi-img $iso_dir
+    $SUDO $tools/make-efi-img $iso_dir "$DISTRO_NAME-uefi"
 
     repack_gfx_cpio isolinux $isolinux_cpio
     repack_gfx_cpio syslinux $syslinux_cpio
@@ -1390,11 +1473,11 @@ Bootloader_Data
 
         rm -rf $initrd_dir/lib/modules/
 
-        #$tools/copy-initrd-modules --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir \
-        #    --count --dir kernel/drivers/ata $initrd_modules_file*
-
         # Note: please used built-in list so we are all in sync.  Thanks!
         $tools/copy-initrd-modules --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
+
+        $tools/copy-initrd-programs --to $initrd_dir --clean
+        $tools/copy-initrd-programs --to $initrd_dir --from $sqfs_dir
     fi
 
     local initrd_gz=$iso_dir/antiX/initrd.gz
@@ -1418,6 +1501,10 @@ Bootloader_Data
 
     cp $work_dir/package-list.out                  $misc_dir/package-list.full
 
+    say "Initializing random number generator"
+    local seed_file=$iso_dir/antiX/$seed_fname
+    dd status=none if=/dev/urandom of=$seed_file bs=1 count=512
+
     leave_stage
 }
 
@@ -1437,20 +1524,24 @@ do_stage_7() {
 
     say "Run updatedb one last time"
     $SUDO chroot $sqfs_dir /usr/bin/updatedb
+    
+    say "Update font cache"
+    $SUDO fc-cache -r -s -v
 
     say "Build the xz compressed linuxfs file. This takes time and uses a lot of CPU power."
 
     local linuxfs_file=$iso_dir/antiX/linuxfs
     rm -f $linuxfs_file
 
-    local arg
-
     start_timer
     #                                                    262144 = 0x40000
-    $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 $arg
+    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 $arg
+    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
+    cmd $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
+
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
-    md5sum_file $linuxfs_file 
+    md5sum_file $linuxfs_file
 
     leave_stage
 }
@@ -1460,7 +1551,7 @@ do_stage_7() {
 #------------------------------------------------------------------------------
 do_stage_8() {
     enter_stage 8 "Create iso file"
-    touch $iso_dir/antiX/esp-uuid
+
     report_size $iso_dir
 
     local iso_file=$full_distro_name.iso
@@ -1505,7 +1596,7 @@ do_stage_8() {
 
     if [ "$SIGN_FILES" ]; then
         say "Sign $(basename $full_iso_file)"
-        gpg --output $full_iso_file.sig --detach-sign $full_iso_file
+        sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
     fi
 
     md5sum_file $full_iso_file
@@ -2253,7 +2344,7 @@ write_version_files() {
 
     echo "$fancy_name" > $prefix/etc/antix-version
 
-    local rstring=$(dd if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
+    local rstring=$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
     local kernels=$K_NAME
     [ "$K_NAME2" ] && kernels="$kernels $K_NAME2"
     local title=$LINUXFS_TITLE
@@ -2699,7 +2790,7 @@ elapsed() {
 # create_cache  type subtype dir
 # restore_cache type subtype dir
 #
-# Each cache is identified by "type-subtupe".  The purpse of this split is to
+# Each cache is identified by "type-subtype".  The purpose of this split is to
 # allow the user to turn caching on and off by type although right now the
 # only type is "debootstrap".
 #
@@ -2849,6 +2940,13 @@ fatal()  {
 }
 
 
+#------------------------------------------------------------------------------
+# echo a command to the sceeen and the log file then run it
+#------------------------------------------------------------------------------
+cmd() {
+    _say_ " > $*"
+    "$@"
+}
 #------------------------------------------------------------------------------
 # plural cnt string
 # Do simple substition on <string> to match the <cnt>.  May need more entries
@@ -3444,11 +3542,13 @@ get_template_file() {
 # Copy Template/COMMON/from_dir/* to to_dir/ and then
 # copy Template/$FLAV/from_dir/* to to_dir/
 # Option -u means copy as normal user.
+#
+# Option -o means only copy if the original file already exists
 #------------------------------------------------------------------------------
 copy_template_dir() {
-    local sudo=$SUDO
-    [ $1 == "-u" ] && sudo="" && shift;
-
+    local sudo=$SUDO  only_overwrite
+    [ $1 == "-u" ] && sudo="" && shift ;
+    [ $1 == "-o" ] && only_overwrite=true && shift ;
     local from=$1 dest=$2
     [ -z "$from" -o -z "$dest" ] \
         && fatal "Missing or empty args for copy_template_dir($from, $dest)"
@@ -3460,9 +3560,26 @@ copy_template_dir() {
     for flav in COMMON $RESPIN_INHERIT $FLAV; do
         local dir=$template/$flav/$from
         [ -d $dir ] || continue
-        say "Copy from Template: $(pq $flav/$from)"
-        $sudo cp -R --preserve=link,mode $dir/* $dest/
+        if [ "$only_overwrite" ]; then
+            say "Only overwrite from Template: $(pq $flav/$from)"
+            only_overwrite $dir $dest
+        else
+            say "Copy from Template: $(pq $flav/$from)"
+            $sudo cp -R --preserve=link,mode $dir/* $dest/
+        fi
     done
+}
+
+only_overwrite() {
+    local from_dir=$1  dest_dir=$2  from  dest
+    while read from; do
+        dest=$dest_dir${from#$from_dir}
+        test -f $dest || continue
+        echo "  --> ${dest#$dest_dir}"
+        $sudo cp -d $from $dest
+    done<<Only_Overwrite
+$(find $from_dir -type f -o -type l)
+Only_Overwrite
 }
 
 update_add_remove_lists() {

@@ -1,0 +1,26 @@
+[Desktop Entry]
+X-Desktop-File-Install-Version=0.11
+Name=xmms
+Comment=Multimedia Player
+Comment[ru]=Медиа-проигрыватель
+Comment[uk]=Медіа-програвач
+Comment[cs]=Přehrávač hudby založený
+Comment[tr]=Çokluortam Oynatıcı
+Comment[de]=Audio-Player
+Comment[zh_CN]=基于Qt4的多媒体播放器
+Comment[zh_TW]=基于Qt4的多媒體播放器
+GenericName=Audio player
+GenericName[cs]=Přehrávač hudby
+GenericName[de]=Audio-Player
+GenericName[ru]=Аудио-проигрыватель
+GenericName[uk]=Медіа-програвач
+GenericName[tr]=Ses Oynatıcı
+GenericName[zh_CN]=音乐播放器
+GenericName[zh_TW]=音樂播放器
+Exec=xmms
+Icon=xmms
+Terminal=false
+Type=Application
+Categories=AudioVideo;Player;Audio;
+
+

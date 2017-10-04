@@ -1,0 +1,12 @@
+prog "Rox-Fluxbox" - /usr/local/lib/desktop-session/desktop-session-restart Rox-Fluxbox
+prog "Space-Fluxbox" - /usr/local/lib/desktop-session/desktop-session-restart Space-Fluxbox
+prog "Fluxbox" - /usr/local/lib/desktop-session/desktop-session-restart Fluxbox
+prog "min-Fluxbox" - /usr/local/lib/desktop-session/desktop-session-restart Min-Fluxbox
+prog "Rox-IceWM" - /usr/local/lib/desktop-session/desktop-session-restart Rox-IceWM
+prog "Space-IceWM" - /usr/local/lib/desktop-session/desktop-session-restart Space-IceWM
+prog "IceWM" - /usr/local/lib/desktop-session/desktop-session-restart IceWM
+prog "min-IceWM" - /usr/local/lib/desktop-session/desktop-session-restart min-IceWM
+prog "Rox-Jwm" - /usr/local/lib/desktop-session/desktop-session-restart Rox-Jwm
+prog "Space-Jwm" - /usr/local/lib/desktop-session/desktop-session-restart Space-Jwm
+prog "Jwm" - /usr/local/lib/desktop-session/desktop-session-restart Jwm
+prog "min-Jwm" - /usr/local/lib/desktop-session/desktop-session-restart min-Jwm

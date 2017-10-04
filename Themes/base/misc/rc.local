@@ -14,14 +14,23 @@ restore=/live/etc/init.d/live-restore-services
 
 [ -x $restore ] && $restore start
 
+# Restore files under /sys *after* udev has run, otherwise
+# the module we want to manipulate may not be loaded yet.
+usb_save=/live/etc/init.d/live-usb-save
+[ -x $usb_save ] && $usb_save sys
+
 # Add a background image to every virtual console if the splash
 # boot parameter was given
-/sbin/splash-all --auto
+splash=/sbin/splash-all
+test -x $splash && $splash --auto
 
 # Enable fstab auto-stuff after udev has run
 fstab_rules=/live/etc/udev/rules.d/90-fstab-automount.rules
-test -e /live/config/fstab-hotplug \
-    && test -e $fstab_rules && cp $fstab_rules /etc/udev/rules.d/
+if [ -e /live/config/fstab-hotplug -a -e $fstab_rules ]; then
+    cp $fstab_rules /etc/udev/rules.d/
+    touch /etc/fstab.hotplug
+    udevadm control --reload-rules
+fi
 
 # Detect and set up correct broadcom
 /usr/local/bin/BroadcomStartup
