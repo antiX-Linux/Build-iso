@@ -64,11 +64,7 @@ libudev1
 libudev-dev
 live-init-antix 
 live-kernel-updater
-<<<<<<< HEAD
 #live-usb-cli-antix
-=======
-live-usb-cli-antix
->>>>>>> upstream/master
 live-usb-maker
 lockfile-progs
 make
@@ -127,8 +123,5 @@ xdg-user-dirs
 xfsprogs
 xkb-data
 xorriso
-<<<<<<< HEAD
 youtube-dl
 zsync
-=======
->>>>>>> upstream/master
