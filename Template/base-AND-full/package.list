@@ -141,7 +141,7 @@ gnupg1-curl
 gnupg2
 gparted
 gpm
-group-management-antix
+#group-management-antix
 growisofs
 grsync
 grubcc-antix

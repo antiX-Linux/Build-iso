@@ -13,6 +13,8 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 . /lib/lsb/init-functions
 
+PROTECT_LIST="^(/sbin/mount.ntfs|mount.ntfs|mount.fuse|mount.cifs|ntfs-3g|/sbin/mount.ntfs-3g|rpcbind|/sbin/wpa_supplicant)"
+
 # Make it possible to see who the misbehaving processes are
 report_unkillable() {
 	if [ -x /usr/bin/pstree ] ; then
@@ -26,6 +28,22 @@ report_unkillable() {
 
 do_stop () {
 	OMITPIDS=
+
+    #pgrep -f "$PROTECT_LIST"
+    local pid
+    for pid in $(pgrep -f "$PROTECT_LIST"); do
+        OMITPIDS="$OMITPIDS${OMITPIDS:+ }-o $pid"
+    done
+
+    echo "omit list: " $OMITPIDS
+
+	for omitfile in /run/sendsigs.omit; do
+		if [ -e $omitfile ]; then
+			for pid in $(cat $omitfile); do
+				OMITPIDS="${OMITPIDS:+$OMITPIDS }-o $pid"
+			done
+		fi
+	done
 
 	for omitfile in /run/sendsigs.omit; do
 		if [ -e $omitfile ]; then

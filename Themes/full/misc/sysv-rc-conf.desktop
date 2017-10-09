@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=rc-conf-wrapper.sh
+Icon=gnome-settings-default-applications
+Terminal=false
+Name=Choose Startup Services
+Categories=System;
+NoDisplay=False

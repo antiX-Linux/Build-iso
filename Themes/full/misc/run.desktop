@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Run
+Icon=system-run
+Categories=Utility;
+Exec=gexec
+Terminal=false

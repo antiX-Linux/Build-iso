@@ -26,4 +26,4 @@ Type=Application
 Terminal=true
 Exec=su-to-root -c "/usr/local/bin/ddm-mx -i nvidia"
 Categories=ConsoleOnly;System;MX-Setup;
-NoDisplay=True
+NoDisplay=False
