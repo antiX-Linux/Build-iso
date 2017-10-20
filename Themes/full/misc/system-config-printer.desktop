@@ -104,4 +104,4 @@ Icon=printer
 StartupNotify=true
 X-Desktop-File-Install-Version=0.22
 Categories=System;Settings;HardwareSettings;Printing;GTK;
-NoDisplay=True
+NoDisplay=False

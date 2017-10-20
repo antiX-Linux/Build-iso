@@ -1,3 +1,8 @@
+# Standard antiX .conkyrc file
+#
+# Note: delete the line above to disable automatic scaling with DPI
+# on the live system.
+
 # set to yes if you want Conky to be forked in the background
 background yes
 
@@ -219,28 +224,45 @@ uppercase no
 
 TEXT
 ${color3}${alignc}antiX
-${color8}$alignc${font DejaVu Sans:size=12}${time %I:%M}${color black} . $font
+${color8}$alignc${font DejaVu Sans:size=12}${time %I:%M}   $font
 ${color}${alignc}${time %a %d %b}
-${color}${alignc}${exec disp=${DISPLAY#:}; disp=${disp%.[0-9]}; cat $HOME/.desktop-session/desktop-code.$disp 2>/dev/null}
-${color3}${alignc}${execi 60 xdpyinfo | sed -n -r "s/^\s*dimensions:.*\s([0-9]+x[0-9]+).*/\1/p"}
-${color}${alignc}$kernel
 ${color}${alignc}Uptime: $uptime
-
+${color}${alignc}${exec disp=${DISPLAY#:}; disp=${disp%.[0-9]}; cat $HOME/.desktop-session/desktop-code.$disp 2>/dev/null}
+${color}res:${alignr}${color3}${execi 60 xdpyinfo | sed -n -r "s/^\s*dimensions:.*\s([0-9]+x[0-9]+).*/\1/p"}
+${color}dpi:${alignr}${color3}${execi 60 sed -nr "s/^\s*Xft.dpi:\s*([0-9]+(x[0-9]+)?).*/\1/p" $HOME/.Xresources | grep "[0-9]" || echo 96}
+${color}Automount: ${alignr}${color3}${execi 60 grep -q "^automount=TRUE" $HOME/.desktop-session/automount.conf 2>/dev/null && echo "enabled" || echo "disabled"}
 ${color}CPU:${alignr}${color3}${cpu}${color}%
-${color2}$alignr${cpugraph cpu0 40, 170 5599cc 5599cc }
+${color}Freq:${color3}${alignr}${freq}
+${color}$alignr${cpugraph cpu0 30,170 5599cc 5599cc}
 ${color}Disk:${alignr}${color3}${diskio}
-${color2}${alignr}${diskiograph 40,170 5599cc 5599cc }
-${if_up eth0}${color}eth0 up: $alignr${color3} ${upspeed eth0}
-${color2}$alignr${upspeedgraph   eth0 40,170 5599cc 5599cc 1000 -l}
+${color}${alignr}${diskiograph 30,170 5599cc 5599cc}${if_up eth0}
+${color}eth0 up: $alignr${color3} ${upspeed eth0}
+${color}$alignr${upspeedgraph   eth0 30,170 5599cc 5599cc}
 ${color}eth0 down: $alignr${color3} ${downspeed eth0}
-${color2}$alignr${downspeedgraph eth0 40,170  5599cc 5599cc 1000 -l}${endif}
-${if_up wlan0}${color}wlan0 up: $alignr${color3} ${upspeed wlan0}
-${color2}$alignr${upspeedgraph   wlan0 40,170 5599cc 5599cc 1000 -l}
+${color2}$alignr${downspeedgraph eth0 30,170  5599cc 5599cc}${endif}${if_up eth1}
+${color}eth1 up: $alignr${color3} ${upspeed eth1}
+${color}$alignr${upspeedgraph   eth1 30,170 5599cc 5599cc}
+${color}eth1 down: $alignr${color3} ${downspeed eth1}
+${color2}$alignr${downspeedgraph eth1 30,170  5599cc 5599cc}${endif}${if_up wlan0}
+${color}wlan0 up: $alignr${color3} ${upspeed wlan0}
+${color2}$alignr${upspeedgraph   wlan0 30,170 5599cc 5599cc}
 ${color}wlan0 down: $alignr${color3} ${downspeed wlan0}
-${color2}$alignr${downspeedgraph wlan0 40,170 5599cc 5599cc 1000 -l}${endif}
-${color}${alignr}${color3}Used / Total
+${color2}$alignr${downspeedgraph wlan0 30,170 5599cc 5599cc}${endif}${if_up wlan1}
+${color}wlan1 up: $alignr${color3} ${upspeed wlan1}
+${color2}$alignr${upspeedgraph   wlan1 30,170 5599cc 5599cc}
+${color}wlan1 down: $alignr${color3} ${downspeed wlan1}
+${color2}$alignr${downspeedgraph wlan1 30,170 5599cc 5599cc}${endif}
+${color}${alignr}${color8}Used / Total
 ${color}RAM:${alignr}$mem ${color3} /${color} $memmax
 ${color}Swap:${alignr}$swap ${color3} /${color} $swapmax
 ${color}/ Disk:${alignr}${fs_used /} ${color3} /${color} ${fs_size /}
 ${color3}${alignc}${execi 1000 persist-enabled}
 ${execi 1000 acpi 2>/dev/null | grep -q . && echo "Batt: "}${execi 10 acpi -b 2>/dev/null | cut -d" " -f3,4 | sed 's/,$//'}
+
+
+
+
+
+
+
+

@@ -51,11 +51,11 @@ main() {
     test -d $IDIR || error "$IDIR is not a directory"
     #del_line_skel xxxx ".%s/menu"
 
-    local ds_startup="etc/desktop-session/startup"
+    local ds_startup=".desktop-session/startup"
     local rox_pb=".config/rox.sourceforge.net/ROX-Filer/pb_antiX-%s"
 
     del_line      "toram-eject"              $ds_startup
-    del_line      "persist-config"           $ds_startup
+    del_line      "bootchart"                $ds_startup
     del_line_skel "antixsources.sh"          ".%s/menu"
     del_line_skel "antixsources.desktop"     $rox_pb
     rm_file_skel  "Desktop/Installer"

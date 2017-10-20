@@ -959,6 +959,10 @@ do_stage_4() {
         else
             error "Missing or unknown cursor icon theme $(pqw $CURSOR_ICON_THEME)"
         fi
+
+	say "Reconfigure networking sym links"
+        update-rc.d networking remove
+        update-rc.d networking defaults
         say "Disable bootchart-done"
         update-rc.d "bootchart-done" remove
         end_part_strict
@@ -1086,7 +1090,7 @@ do_stage_4() {
     if do_part 18 "Run second apt-get -f install"; then
 
         if [ "$DEBIAN_RELEASE" != "wheezy" ]; then
-            apt-get $APT_GET_OPTS purge gcc-4.8-base systemd libsystemd0 uuid-runtime
+            apt-get $APT_GET_OPTS purge systemd libsystemd0 
         fi
 
         apt-get -f install
@@ -1207,6 +1211,12 @@ do_stage_5() {
     if do_part 21 "!Check kernel's GCC version"; then
         check_kernel_gcc vmlinuz-$K_NAME
         end_part_strict
+    fi
+    	
+    if [ "$FLAV" = "base" ]; then
+        say "Change flubox and icewm menu-applications files"
+        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications-fb $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications
+        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications-ice $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications
     fi
 
     local f wm
@@ -1514,6 +1524,9 @@ do_stage_7() {
 
     say "Run updatedb one last time"
     $SUDO chroot $sqfs_dir /usr/bin/updatedb
+    
+    say "Update font cache"
+    $SUDO fc-cache -r -s -v
 
     say "Build the xz compressed linuxfs file. This takes time and uses a lot of CPU power."
 
