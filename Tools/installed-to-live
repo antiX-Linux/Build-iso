@@ -63,8 +63,14 @@ LIVE_FILE_LIST="
 /etc/skel/.jwm/menu
 /etc/skel/Desktop/Installer.desktop
 /etc/udev/rules.d/90-fstab-automount.rules
-/etc/udev/rules.d/92-console-font.rules
+/lib/udev/rules.d/92-console-font.rules
 /usr/share/applications/mx/minstall.desktop
+/usr/share/applications/antix/minstall.desktop
+/usr/share/applications/antix/antixsources.desktop
+/usr/share/applications/antix/persist-config.desktop
+/usr/share/applications/antix/persist_setup.desktop
+/usr/share/applications/antix/persist_save.desktop
+/usr/share/applications/antix/remaster.desktop
 "
 
 GENERAL_LIVE_FILE_LIST="
@@ -313,7 +319,6 @@ machine: $(uname -m)
 Version_Info
 
     bind_mount_template "$vdir" "$BIND_ROOT" "$REAL_ROOT"
-
 }
 
 do_exclude() {
@@ -447,7 +452,7 @@ do_timezone() {
 
     read_conf_file $conf_file
 
-    local zone_file=/usr/share/zoneinfo/$tz
+    local zone_file=$REAL_ROOT/usr/share/zoneinfo/$tz
     if ! test -e "$zone_file"; then
         error "Invalid timezone: $tz"
         return
@@ -456,8 +461,18 @@ do_timezone() {
     local tz_dir=$work_dir/tz
     local etc_dir=$tz_dir/etc
     mkdir -p $etc_dir
-    cp $zone_file $etc_dir/localtime
     echo "$tz" > $etc_dir/timezone
+
+    local real_localtime=$REAL_ROOT/etc/localtime
+    if test -f $real_localtime; then
+        cp $(readlink -f $zone_file) $etc_dir/localtime
+
+    elif test -l $real_localtime; then
+        :
+    else
+        error "Could not file: $real_localtime"
+    fi
+
     bind_mount_template "$tz_dir"  "$BIND_ROOT" "$REAL_ROOT"
 }
 
